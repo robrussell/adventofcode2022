@@ -1,0 +1,32 @@
+# Scissors vs Paper. Lose. 2
+# Draw against Scissors. Scissors. 3 + 3 = 6
+C Y
+# Scissors vs Paper. Lose. 2
+# Draw against Scissors. Scissors. 3 + 3 = 6
+C Y
+# Paper vs Rock. Lose. 1
+# Lose against Paper. Rock. 1
+B X
+# Paper vs Paper. Draw. 2 + 3 = 5
+# Draw against Paper. Paper. 2 + 3 = 5
+B Y
+# Scissors vs Scissors. Draw. 3 + 3 = 6
+# Win against Scissors. Rock. 1 + 6 = 7
+C Z
+# Scissors vs Scissors. Draw. 3 + 3 = 6
+# Win against Scissors. Rock. 1 + 6 = 7
+C Z
+# Scissors vs Paper. Lose. 2 + 0 = 2
+# Draw against Scissors. Scissors. 3 + 3 = 6
+C Y
+# Paper vs Scissors. Win. 3 + 6 = 9
+# Win against Scissors. Rock. 1 + 6 = 7
+B Z
+B Y
+C Z
+B X
+C Z
+B Z
+C Y
+C Y
+C Y
