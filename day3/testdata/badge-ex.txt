@@ -1,0 +1,17 @@
+# Easy
+a
+a
+a
+
+xyz
+azb
+zmn
+
+# a in common
+abcdefghijklmnopqrstuvwxyz
+aaaaaaaaaaaambbbbbbbbbbbbb
+bbbbbbbbbbbbmaaaaaaaaaaaaa
+
+DDDDDDDDDDDEFFFFFFFFF
+GGGGHEGGGGGGGG
+IEIII
