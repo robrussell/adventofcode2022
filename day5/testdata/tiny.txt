@@ -1,4 +1,5 @@
 [G]        
+[H] [F]     
  1   2
 
 move 1 from 1 to 2

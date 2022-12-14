@@ -3,6 +3,7 @@
 [V] [V]     [F]
 [R] [B] [N] [N]
 [D] [T] [M] [J]
+[W] [X] [Y] [Z]
  1   2   4   5 
 
 move 3 from 1 to 4
