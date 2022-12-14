@@ -1,0 +1,11 @@
+    [S]        
+[G] [H]        
+[V] [V]     [F]
+[R] [B] [N] [N]
+[D] [T] [M] [J]
+ 1   2   4   5 
+
+move 3 from 1 to 4
+move 1 from 4 to 2
+move 4 from 4 to 5
+move 2 from 5 to 1
