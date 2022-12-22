@@ -1,0 +1,9 @@
+# Head goes to 0, 10. Tail goes to 0, 9
+U 10
+# Head goes to 0, 20. Tail goes to 0, 19
+U 10
+# Head goes to 10, 20. Tail goes to 9, 19
+R 10
+# Head goes to -10, 20. Tail goes to -9, 20
+L 20
+# Unique positions for the tail: 4 + (0, 0)
