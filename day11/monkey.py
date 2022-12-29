@@ -10,21 +10,61 @@ MonkeyId = str
 WorryItemId = str
 WorryOperation = Callable
 
+# Don't bother factoring until numbers are bigger than this
+START_FACTORING = 1_000_000_000_000
+
+# Let's get some primes. Silly but quick enough.
+def make_some_primes(how_many: int = 100) -> List[int]:
+  def qf(n : int) -> List[int]:
+    # It would be faster to give up after finding a second factor.
+    # It would also be faster to try the primes we've already found.
+    return [i for i in range(1, int(n/2) + 1) if n % i == 0]
+  def fp(m : int) -> List[int]:
+    return [i for i in range(1, m) if len(qf(i))==1]
+  return fp(how_many)
+
+PRIMES : Optional[List[int]] = None
+
+def product(f : List[int]) -> int:
+  r = 1
+  for i in f:
+    r *= i
+  return r
+
+def factor(n : int, PRIMES=PRIMES):
+  """ Returns a list of factors of `n`. Each factor from PRIMES will show up
+  just once. This is useful for answering whether n is divisible by the value.
+  """
+  if not PRIMES:
+    PRIMES = make_some_primes()
+  factors : List[int] = []
+  for p in PRIMES:
+    quotient, remainder = divmod(n, p)
+    if remainder == 0:
+      factors.append(p)
+      n = quotient
+  factors.append(n)
+  return factors
+
 @dataclass
 class WorryItem:
   id : WorryItemId
   worry_level : int
+  factors : List[int] = field(init=False)
+  factors_fresh : bool = field(init=False, default=False)
 
 class Monkey:
   def __init__(self, id : MonkeyId, 
       starting_items : List[WorryItem],
       operation : WorryOperation,
+      factored_operation : WorryOperation,
       test_division : int,
       branch_true : MonkeyId,
       branch_false : MonkeyId):
     self.id_ : MonkeyId = id
     self.items_ : List[WorryItem] = starting_items
     self.operation_ : WorryOperation = operation
+    self.factored_operation_ : WorryOperation = factored_operation
     self.test_division_ : int = test_division
     self.branch_true_ : MonkeyId = branch_true
     self.branch_false_ : MonkeyId = branch_false
@@ -39,21 +79,31 @@ class Monkey:
   def get_inspection_count(self):
     return self.inspection_count_
 
-  def take_turn(self, throw : Callable):
+  def take_turn(self, throw : Callable, post_inpect_worry_reduction=True):
     """ The turn has 3 stages for each item:
       * Inspect the item. Apply the operation to the item's worry level.
-      * Get bored with the item. Divide item's worry level by 3.
+      * Get bored with the item. Divide item's worry level by 3 (only in part 1).
       * Test the item's worry level and throw it accordingly.
       The throw function is called with a `MonkeyId` and a `WorryItem`.
     """
     for i in self.items_:
-      i.worry_level = self.operation_(i.worry_level)
       self.inspection_count_ += 1
-      i.worry_level //= 3
-      target = (self.branch_true_ 
-        if (i.worry_level % self.test_division_ == 0) 
-        else self.branch_false_)
-      print(f'{i.id} level {i.worry_level}, throw to {target}')
+      if i.worry_level < START_FACTORING:
+        i.worry_level = self.operation_(i.worry_level)
+        if post_inpect_worry_reduction:
+          i.worry_level //= 3
+        target = (self.branch_true_
+          if (i.worry_level % self.test_division_ == 0) 
+          else self.branch_false_)
+        print(f'{i.id} level {i.worry_level}, throw to {target}')
+      else:
+        if not i.factors_fresh:
+          i.factors = factor(i.worry_level)
+          i.factors_fresh = True
+        i.factors = self.factored_operation_(i.factors)
+        target = (self.branch_true_
+          if (self.test_division_ in i.factors) 
+          else self.branch_false_)
       throw(target, i)
     # All items have been thrown.
     self.items_.clear()
@@ -66,6 +116,7 @@ class MonkeyBuilder:
     starting_items : Optional[List[WorryItem]] = field(init=False)
     # Math operation interpretted as a function
     operation : Optional[WorryOperation] = field(init=False)
+    factored_operation : Optional[Callable] = field(init=False)
     # Number to use in division test
     test_division : Optional[int] = field(init=False)
     # ID of monkey to throw item to on True result
@@ -75,6 +126,7 @@ class MonkeyBuilder:
 
     def build(self) -> Monkey:
       if not (self.operation and 
+        self.factored_operation and 
         self.starting_items and 
         self.test_division and 
         self.branch_true and
@@ -83,6 +135,7 @@ class MonkeyBuilder:
       return Monkey(self.id, 
         self.starting_items, 
         self.operation,
+        self.factored_operation,
         self.test_division,
         self.branch_true,
         self.branch_false)
@@ -108,6 +161,32 @@ def from_file(filename : str) -> Dict[MonkeyId, Monkey]:
           return lambda x : x + t2
         case '*':
           return lambda x : x * t2
+
+  def make_factored_op(op, t2):
+    # old op old
+    if t2 == 'old':
+      match op:
+        case '+':
+          def f(x):
+            x.append(2)
+            return x
+          return f
+        case '*':
+          def f(x):
+            x.extend(x)
+            return x
+          return f
+    # old op int
+    else:
+      t2 = int(t2)
+      match op:
+        case '+':
+          return lambda x : factor(product(x) + t2)
+        case '*':
+          def f(x):
+            x.append(t2)
+            return x
+          return f
 
   with open(filename) as f:
     for line in f.readlines():
@@ -135,6 +214,7 @@ def from_file(filename : str) -> Dict[MonkeyId, Monkey]:
           if t1 != 'old':
             raise Exception('Unsupported operation {t1}.')
           current_monkey.operation = make_op(op, t2)
+          current_monkey.factored_operation = make_factored_op(op, t2)
         case 'T' if current_monkey:
           _, test_text = line.split(':')
           d, b, v = test_text.split()
